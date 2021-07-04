@@ -63,6 +63,15 @@ export default {
         }
       ]
     }
+  },
+  methods: {
+    async updateArticle(slug) {
+      const { data } = await getArticle(slug);
+      const { article } = data;
+      const md = new MarkdownIt()
+      article.body = md.render(article?.body)
+      this.article = data?.article
+    }
   }
 }
 </script>

@@ -1,12 +1,12 @@
 <template>
   <div>
-    <form class="card comment-form">
+    <form class="card comment-form" @submit.prevent="addComment">
       <div class="card-block">
-        <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
+        <textarea v-model="comment" required class="form-control" placeholder="Write a comment..." rows="3"></textarea>
       </div>
       <div class="card-footer">
-        <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-        <button class="btn btn-sm btn-primary">
+        <img :src="$store.state.user.image" class="comment-author-img" />
+        <button class="btn btn-sm btn-primary" type="submit">
           Post Comment
         </button>
       </div>
@@ -35,6 +35,10 @@
           {{ comment.author.username }}
         </nuxt-link>
         <span class="date-posted">{{ comment.createdAt | date('MMM DD, YYYY') }}</span>
+
+        <span class="mod-options" v-if="comment.author.username === $store.state.user.username">
+          <i class="ion-trash-a" @click="deleteComment(comment.id)"></i>
+        </span>
       </div>
     </div>
 
@@ -42,24 +46,39 @@
 </template>
 
 <script>
-import { getComments } from '@/api/article'
+import { getComments, addComment, deleteComment } from '@/api/article'
 export default {
   name: "article-comments",
   props: {
     article: {
       type: Object,
       required: true
-    }
+    },
   },
   data () {
     return {
-      comments: [] // 文章列表
+      comments: [], // 文章列表
+      comment: ''
     }
   },
-  async mounted() {
-    const { data } = await getComments(this.article.slug)
-    console.log(data);
-    this.comments = data.comments
+  mounted() {
+    this.updateComments()
+
+  },
+  methods: {
+    async updateComments() {
+      const { data } = await getComments(this.article.slug)
+      console.log(data);
+      this.comments = data.comments
+    },
+    async addComment() {
+      await addComment(this.article.slug, this.comment)
+      await this.updateComments()
+    },
+    async deleteComment(id) {
+      await deleteComment(this.article.slug, id)
+      await this.updateComments()
+    }
   }
 }
 </script>
